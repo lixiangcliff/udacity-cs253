@@ -18,6 +18,9 @@ import webapp2
 import validation
 import escape
 
+#print Util.escape("<>")
+#import escape
+
 form="""
 <form method="post">
     What is your birthday?
@@ -30,7 +33,7 @@ form="""
     <label> Day
         <input type="text" name="day" value="%(day)s">
     </label>
-    
+     
     <label> Year
         <input type="text" name="year" value="%(year)s">
     </label>
