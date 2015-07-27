@@ -5,9 +5,9 @@ Created on Jul 24, 2015
 '''
 import string
 
-def rot13(str):
+def rot13(text):
     res = ""
-    for x in str:
+    for x in text:
         if not x.isalpha():
             res += x
         else:

@@ -1,36 +1,36 @@
 import webapp2
-import escape
-import rot13
+import jinja2
+import os
+import rot13_encode
+import logging
 
-form="""
-<form method="post">
-    Enter some text to ROT13:
-    <br>
-    <textarea type="text" name="rotText" value=%(rotText)s>
-    </textarea>
-    <br>
-    
-    
-    <br>
-    <input type="submit">
-</form>
-"""
+template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
+                               autoescape = True)
+        
+class BaseHandler(webapp2.RequestHandler):
+    def write(self, *a, **kw):
+        self.response.out.write(*a, **kw)
+         
+    def render_str(self, template, **params):
+        t = jinja_env.get_template(template)
+        return t.render(params)
+     
+    def render(self, template, **kw):
+        self.write(self.render_str(template, **kw))
 
-class MainPage(webapp2.RequestHandler):
-    def write_form(self, rotText=""):
-        self.response.out.write(form % {"rotText" : escape.escape_html(rotText) })  
-      
+class MainPage(BaseHandler):
     def get(self):
-        self.write_form()
-        #self.response.out.write(form)
+        #logging.info("@@@@in get method@@@@")  
+        self.render("rot13-form.html")
         
-    def post(self):        
-        rotTextStr = rot13.rot13(self.request.get('rotText'))
+    def post(self): 
+        rot13 = ''
+        text = self.request.get('text')  
+        if text:
+            rot13 = text.encode('rot13') 
+            #rot13 = rot13_encode.rot13(self.request.get('text')) @my own method also works.
+            #logging.info("@@in post method@@rot13 is 2 @@@%s@@@" % rot13)
+        self.render("rot13-form.html", text = rot13)
         
-        #self.response.out.write(rotTextStr)
-        self.write_form(rotTextStr)
-        
-        
-app = webapp2.WSGIApplication([
-    ('/', MainPage),
-], debug=True)
+app = webapp2.WSGIApplication([('/', MainPage)], debug=True)
