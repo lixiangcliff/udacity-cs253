@@ -12,7 +12,7 @@ template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
 
-class Handler(webapp2.RequestHandler):
+class BlogHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
         self.response.out.write(*a, **kw)
         
@@ -28,7 +28,7 @@ class Art(db.Model):
     art = db.TextProperty(required = True)
     created = db.DateTimeProperty(auto_now_add = True)
 
-class MainPage(Handler):
+class MainPage(BlogHandler):
     def render_front(self, title="", art="", error=""):
         arts = db.GqlQuery("SELECT * FROM Art "
                            "ORDER BY created DESC ")

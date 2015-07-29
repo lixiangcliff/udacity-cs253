@@ -1,11 +1,7 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>New Post Page</title>
-</head>
-<body>
-	<h1>new post</h1>
+{% extends "base.html" %}
+
+{% block content %}
+	<h2>new post</h2>
 	<form method="post">
 		<label>
 			<div>subject</div>
@@ -14,7 +10,7 @@
 		
 		<label>
 			<div>blog</div>
-			<textArea name="blog" rows=30 cols=100>{{blog}}</textArea>
+			<textArea name="content" rows=30 cols=100>{{content}}</textArea>
 		</label>
 		
 		<div class="error">{{error}}</div>
@@ -22,13 +18,4 @@
 	</form>
 	
 	
-<!-- 	<hr> -->
-<!-- 	{% for blog in blogs %} -->
-<!-- 		<div class="blog"> -->
-<!-- 			<div class="blog-subject">{{blog.subject}}</div> -->
-<!-- 			<pre class="blog-body">{{blog.blog}}</pre> -->
-<!-- 		</div> -->
-<!-- 	{% endfor %} -->
-
-</body>
-</html>
+{% endblock %}
