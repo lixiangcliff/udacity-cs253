@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Account infos</title>
+</head>
+
+<body>
+  <h1>
+    User Account infos:
+  </h1>
+	<a href="/signup">Click here to add user!</a><br>
+		
+		{% for u in users %}
+			<div>
+				{{ u.username }}
+				{{ u.password }}
+				{{ u.email }}
+			<br>
+			</div>
+		{% endfor %}
+		
+
+</body>
+
+</html>
+
