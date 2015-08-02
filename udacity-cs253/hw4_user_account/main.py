@@ -6,6 +6,8 @@ import re
 import random
 import string
 import hashlib
+import hmac
+from string import letters
 from google.appengine.ext import db
 
 secret = 'fart'
@@ -18,22 +20,27 @@ def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
 
-def make_salt():
-    return ''.join(random.choice(string.letters) for x in xrange(5))
+def make_salt(length = 5):
+    return ''.join(random.choice(letters) for x in xrange(length))
 
 def make_pw_hash(name, pw, salt = None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (h, salt)
+    return '%s,%s' % (salt, h)
 
-def valid_pw(name, pw, h):
+def valid_pw(name, password, h):
     ###Your code here
-    salt = h.split(',')[1]
-    return h.split(',')[0] == hashlib.sha256(name + pw + salt).hexdigest()
+    #salt = h.split(',')[1]
+    #return h.split(',')[0] == hashlib.sha256(name + pw + salt).hexdigest()
+    salt = h.split(',')[0]
+    return h == make_pw_hash(name, password, salt)
 
 def users_key(group = "default"):
     return db.Key.from_path('users', group)
+
+def make_secure_val(val):
+    return "%s|%s" % (val, hmac.new(secret, val).hexdigest())
         
 class BaseHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -45,7 +52,17 @@ class BaseHandler(webapp2.RequestHandler):
      
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
-
+        
+    def set_secure_cookie(self, name, val):
+        cookie_val = make_secure_val(val)
+        self.response.headers.add_header('Set-Cookie', 
+                                         "%s=%s; Path=/" % (name, cookie_val))
+        
+    def login(self, user):
+        self.set_secure_cookie("user_id", str(user.key().id()))
+        pass
+    
+    
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
     return username and USER_RE.match(username)
@@ -83,9 +100,9 @@ class User(db.Model):
                     password = pw_hash, 
                     email = email)
     @classmethod    
-    def login(cls, username, pw):
+    def login(cls, username, password):
         u = cls.by_name(username)
-        if u and valid_pw(username, pw, u.password):
+        if u and valid_pw(username, password, u.password):
             return u
 
 class Signup(BaseHandler):
@@ -138,8 +155,19 @@ class UserList(BaseHandler):
 
 class Login(BaseHandler):
     def get(self):
-        users = db.GqlQuery("SELECT * FROM User ORDER BY created DESC")
-        self.render("userlist.html", users=users)
+        self.render("login-form.html")
+        
+    def post(self):
+        username = self.request.get("username")
+        password = self.request.get("password")
+        
+        u = User.login(username, password)
+        if u:
+            self.login(u)
+            self.redirect('/userlist')
+        else:
+            errorMsg = 'Invalid login'
+            self.render('login-form.html', error = errorMsg)
         
 class Logout(BaseHandler):
     def get(self):
