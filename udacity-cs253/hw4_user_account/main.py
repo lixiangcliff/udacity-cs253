@@ -41,6 +41,11 @@ def users_key(group = "default"):
 
 def make_secure_val(val):
     return "%s|%s" % (val, hmac.new(secret, val).hexdigest())
+
+def check_secure_val(secure_val):
+    val = secure_val.split('|')[0]
+    if secure_val == make_secure_val(val):
+        return val
         
 class BaseHandler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -57,10 +62,22 @@ class BaseHandler(webapp2.RequestHandler):
         cookie_val = make_secure_val(val)
         self.response.headers.add_header('Set-Cookie', 
                                          "%s=%s; Path=/" % (name, cookie_val))
+    
+    def read_secure_cookie(self, name):
+        cookie_val = self.request.cookies.get(name)
+        return cookie_val and check_secure_val(cookie_val)
         
     def login(self, user):
         self.set_secure_cookie("user_id", str(user.key().id()))
         pass
+    
+    def logout(self):
+        self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
+        
+    def initialize(self, *a, **kw):
+        webapp2.RequestHandler.initialize(self, *a, **kw)
+        uid = self.read_secure_cookie('user_id')
+        self.user = uid and User.by_id(int(uid))
     
     
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
@@ -171,8 +188,8 @@ class Login(BaseHandler):
         
 class Logout(BaseHandler):
     def get(self):
-        users = db.GqlQuery("SELECT * FROM User ORDER BY created DESC")
-        self.render("userlist.html", users=users)
+        self.logout()
+        self.render("userlist.html")
         
 class Welcome(BaseHandler):
     def get(self):
