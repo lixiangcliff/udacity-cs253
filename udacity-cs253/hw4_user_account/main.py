@@ -124,7 +124,6 @@ class User(db.Model):
 
 class Signup(BaseHandler):
     def get(self):
-        #logging.info("@@@@in get method@@@@")  
         self.render("signup-form.html")
         
     def post(self): 
